@@ -1,0 +1,22 @@
+# 示例 unit（install.sh 会按本机路径生成正式版本；本文件仅作参考）。
+# 手动安装：复制到 ~/.config/systemd/user/im-bridge.service 后按需改路径。
+[Unit]
+Description=zcode-im-sync: 微信/飞书 ↔ zcode TUI 消息同步
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.local/share/zcode-im-sync
+ExecStart=%h/.local/bin/im-bridge --home %h/.local/share/zcode-im-sync run
+Restart=always
+RestartSec=5
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=RUST_LOG=info
+Environment=IM_BRIDGE_HOME=%h/.local/share/zcode-im-sync
+StandardOutput=append:%h/.local/share/zcode-im-sync/logs/service.log
+StandardError=append:%h/.local/share/zcode-im-sync/logs/service.err
+OOMScoreAdjust=-800
+
+[Install]
+WantedBy=default.target

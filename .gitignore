@@ -1,0 +1,6 @@
+/target
+/config.toml
+/credentials/
+/state/
+/logs/
+/media/

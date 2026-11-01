@@ -1,0 +1,28 @@
+# zcode-im-sync 配置示例。install.sh 会按本机路径生成 config.toml（0600）。
+# 凭证不放这里：微信在 credentials/weixin.json，飞书在 credentials/feishu.toml（均 0600）。
+
+[general]
+# 新会话默认工作目录；IM 里 /cwd <path> 可临时切换
+workdir_default = "/home/you/workspace/ai_workspace"
+log_level = "info"
+# 仅本机 HTTP 状态
+http_bind = "127.0.0.1:8106"
+
+[whitelist]
+# 只服务本人。扫码登录会自动并入本人 id；未命中的消息静默丢弃。
+wechat_user_ids = []
+feishu_open_ids = []
+
+[zcode]
+# zcode 可执行文件（TUI 与 app-server 共用）
+bin = "/home/you/.npm-global/bin/zcode"
+# 单轮 turn 超时（秒）
+turn_timeout_s = 600
+
+[wechat]
+base_url = "https://ilinkai.weixin.qq.com"
+cdn_base_url = "https://novac2c.cdn.weixin.qq.com/c2c"
+
+[feishu]
+# feishu（国内）或 lark（国际）
+domain = "feishu"
