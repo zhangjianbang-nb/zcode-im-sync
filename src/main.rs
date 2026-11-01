@@ -270,7 +270,7 @@ fn doctor(app_paths: &paths::AppPaths) -> anyhow::Result<()> {
     let held = lockfile::LockFile::acquire(&lock);
     match held {
         Ok(_) => println!("  实例锁:     空闲（服务未在跑或已退出）"),
-        Err(e) => println!("  实例锁:     已被占用（服务在跑）— {e}"),
+        Err(_) => println!("  实例锁:     已被占用（服务运行中，正常）"),
     }
 
     // 会话绑定与媒体用量（只读）
