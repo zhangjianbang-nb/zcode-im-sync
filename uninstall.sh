@@ -11,6 +11,7 @@ UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 UNIT="$UNIT_DIR/im-bridge.service"
 PURGE=0
 WITH_SHELL=1
+WITH_SERVICE=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -18,6 +19,7 @@ while [[ $# -gt 0 ]]; do
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --purge) PURGE=1; shift ;;
     --no-shell) WITH_SHELL=0; shift ;;
+    --no-service) WITH_SERVICE=0; shift ;;
     -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
     *) echo "未知参数: $1" >&2; exit 2 ;;
   esac
@@ -26,14 +28,18 @@ done
 say() { printf '\033[1;36m[im-sync]\033[0m %s\n' "$*"; }
 
 # 1) 服务
-if systemctl --user list-unit-files im-bridge.service >/dev/null 2>&1; then
-  systemctl --user disable --now im-bridge 2>/dev/null || true
-  say "已停止并禁用 im-bridge.service"
-fi
-if [[ -f "$UNIT" ]]; then
-  rm -f "$UNIT"
-  systemctl --user daemon-reload 2>/dev/null || true
-  say "已删除 $UNIT"
+if [[ "$WITH_SERVICE" == 1 ]]; then
+  if systemctl --user list-unit-files im-bridge.service >/dev/null 2>&1; then
+    systemctl --user disable --now im-bridge 2>/dev/null || true
+    say "已停止并禁用 im-bridge.service"
+  fi
+  if [[ -f "$UNIT" ]]; then
+    rm -f "$UNIT"
+    systemctl --user daemon-reload 2>/dev/null || true
+    say "已删除 $UNIT"
+  fi
+else
+  say "跳过 systemd（--no-service）"
 fi
 
 # 2) shell rc 块

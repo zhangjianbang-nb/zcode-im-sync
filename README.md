@@ -113,6 +113,7 @@ bash -lc 'cd ~/workspace/ai_workspace && zcode'
 ```bash
 ./uninstall.sh            # 停服务、摘 NODE_OPTIONS、删二进制/钩子；保留 config/credentials/state
 ./uninstall.sh --purge    # 连数据目录和凭证一起删
+./uninstall.sh --no-service --no-shell   # 只删二进制/钩子（调试用）
 ```
 
 ## 目录
