@@ -23,8 +23,8 @@ zcode TUI ──NODE_OPTIONS 钩子──────┘
    消息会出现在界面上、上下文连续。
 2. **全过程**：钩子包住 `tui.onEvent`，按**块**采集（不是逐 token），写
    `state/im-events/<session>.ndjson`；桥增量 tail 后格式化成 IM 消息：
-   `🧠 思考`、`🔧 工具调用`（含 Bash 命令/Read 路径等入参）、`📤 工具输出`、
-   `💬 回答`、`🏁 本轮结束（N tools · tokens）`。
+   `💭 思考`、`🔧 工具调用`（含 Bash 命令/Read 路径等入参）、`✅ 工具输出`、
+   `🤖 回答`、`✅ 本轮完成（N tools · tokens）`。
 3. **不双发**：TUI 钩子在线时心跳带 `events:true`，桥的 DB 文本镜像自动让位；
    钩子掉线 6 秒后桥恢复 DB 兜底，不会重复回答。
 
@@ -74,7 +74,9 @@ cd zcode-im-sync
      桥读取心跳里的真实 `session_id` 自动补绑。不会绑到同目录的旧会话。
 3. 在微信里给机器人发消息：
    - TUI 立即出现你的消息并开始跑；
-   - 微信里依次收到：`📥 收到` → `🧠 思考` → `🔧 工具` → `📤 输出` → `💬 回答` → `🏁 结束`。
+   - 微信里依次收到：`📥 收到，开始处理…` → `💭 思考中…` / `💭 思考：…` →
+     `🔧 工具名：入参摘要` → `✅ 工具名（耗时）：输出` → `✍️ 正在输出回答…` →
+     `🤖 回答：…` → `✅ 本轮完成（N 个工具 · tokens）`。
 4. 你在 TUI 里直接敲的消息/回合，也会同样镜像到微信（`src=tui` 的用户消息 + 全过程）。
 
 IM 内控制命令：`/new`（新会话）、`/stop`、`/cwd <path>`、`/status`、`/help`。
@@ -84,7 +86,7 @@ IM 内控制命令：`/new`（新会话）、`/stop`、`/cwd <path>`、`/status`
 
 ```bash
 ./scripts/selftest.sh          # 11 项：二进制/配置/权限/钩子锚点/服务/healthz/doctor
-cargo test                     # 120 Rust 测试
+cargo test                     # 128 Rust 测试（121 单元 + 7 集成）
 node --test tui/test/tui-hook.test.cjs   # 9 钩子测试
 node tui/zcode-tui-im-sync.cjs --check   # 锚点自检（自动定位 TUI bundle）
 ```

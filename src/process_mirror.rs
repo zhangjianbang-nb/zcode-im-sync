@@ -474,6 +474,8 @@ impl EventTailer {
     }
 
     /// 删 7 天前的旧事件文件（只删已轮转/停写的；活跃文件 mtime 很新）。
+    /// 轮转文件名形如 `sess_x.ndjson.<ts>`，扩展名不是 ndjson，因此按“名字含 .ndjson”
+    /// 判断，否则轮转文件会永久堆积。
     fn cleanup_old_files(&self) {
         let Ok(rd) = std::fs::read_dir(&self.events_dir) else {
             return;
@@ -484,7 +486,10 @@ impl EventTailer {
             if p == self.offsets_path {
                 continue;
             }
-            if p.extension().and_then(|s| s.to_str()) != Some("ndjson") {
+            let Some(name) = p.file_name().and_then(|s| s.to_str()) else {
+                continue;
+            };
+            if !name.contains(".ndjson") {
                 continue;
             }
             if let Ok(md) = e.metadata() {
@@ -787,5 +792,39 @@ mod tests {
         d.drain().await;
         assert_eq!(out_rx.try_recv().unwrap().text, "first");
         assert!(out_rx.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn cleanup_removes_rotated_event_files_too() {
+        use std::fs::FileTimes;
+        let dir = tempdir().unwrap();
+        let state = dir.path().to_path_buf();
+        let events = state.join("im-events");
+        std::fs::create_dir_all(&events).unwrap();
+
+        let active = events.join("sess_a.ndjson");
+        let rotated = events.join("sess_a.ndjson.1793495363539");
+        let offsets = events.join("offsets.json");
+        for p in [&active, &rotated, &offsets] {
+            std::fs::write(p, "{}\n").unwrap();
+        }
+        // 全部改成 8 天前，确保过 TTL
+        let old = SystemTime::now() - EVENT_FILE_TTL - Duration::from_secs(3600);
+        for p in [&active, &rotated, &offsets] {
+            let f = std::fs::OpenOptions::new().write(true).open(p).unwrap();
+            f.set_times(FileTimes::new().set_modified(old)).unwrap();
+        }
+
+        let chats = Arc::new(RwLock::new(ChatsFile::default()));
+        let (tx, _rx) = mpsc::channel(1);
+        let tailer = EventTailer::new(&state, chats, tx);
+        tailer.cleanup_old_files();
+
+        assert!(!active.exists(), "活跃事件文件应按 TTL 删除");
+        assert!(
+            !rotated.exists(),
+            "轮转文件 sess_x.ndjson.<ts> 也应按 TTL 删除"
+        );
+        assert!(offsets.exists(), "offsets.json 必须保留");
     }
 }
