@@ -1017,7 +1017,7 @@ function install() {
         },
       });
       esm = true;
-      log('ESM 钩子已安装（registerHooks）');
+      debugLog('ESM 钩子已安装（registerHooks）');
     }
   } catch (e) {
     log(`registerHooks 不可用（忽略）: ${e && e.message}`);
